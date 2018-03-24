@@ -1,6 +1,7 @@
 ﻿using ExpectedObjects;
 using LinqTests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -55,10 +56,43 @@ namespace LinqTests
 
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
+
+        [TestMethod]
+        public void find_products_by_extension()
+        {
+            var products = RepositoryFactory.GetProducts();
+            var actual = products.FindResult(x => x.FilterProductCondition());
+
+            var expected = new List<Product>()
+            {
+                new Product{Id=3, Cost=31, Price=310, Supplier="Odd-e" },
+                new Product{Id=4, Cost=41, Price=410, Supplier="Odd-e" },
+            };
+
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
+
+        [TestMethod]
+        public void find_employee_by_extension()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            var actual = employees.FindResult(x => x.FilterEmployeeCondition());
+
+            var expected = new List<Employee>()
+            {
+                new Employee{Name="Joe", Role=RoleType.Engineer, MonthSalary=100, Age=44, WorkingYear=2.6 } ,
+                new Employee{Name="Tom", Role=RoleType.Engineer, MonthSalary=140, Age=33, WorkingYear=2.6} ,
+                new Employee{Name="Kevin", Role=RoleType.Manager, MonthSalary=380, Age=55, WorkingYear=2.6} ,
+                new Employee{Name="Bas", Role=RoleType.Engineer, MonthSalary=280, Age=36, WorkingYear=2.6} ,
+                new Employee{Name="Joey", Role=RoleType.Engineer, MonthSalary=250, Age=40, WorkingYear=2.6},
+            };
+
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
     }
 }
 
-internal class WithoutLinq
+internal static class WithoutLinq
 {
     public static IEnumerable<Product> FindProductByPrice(IEnumerable<Product> products, int lowBoundary, int highBoundary)
     {
@@ -69,6 +103,11 @@ internal class WithoutLinq
                 yield return product;
             }
         }
+    }
+
+    public static IEnumerable<T> FindResult<T>(this IEnumerable<T> resource, Func<T, bool> predicate)
+    {
+        return resource.Where(product => predicate(product));
     }
 }
 

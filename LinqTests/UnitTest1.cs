@@ -161,16 +161,19 @@ namespace LinqTests
         public void find_employees_age_lower_25_get_role_and_name()
         {
             var employees = RepositoryFactory.GetEmployees();
-            var actual = employees.MyWhere(x => x.Age > 25).MySelect(y => $"{y.Role}:{y.Name}");
+            var actual = employees
+                .MyWhere(x => x.Age < 25)
+                .MySelect(y => $"{y.Role}:{y.Name}");
+
+            foreach (var item in actual)
+            {
+                Console.WriteLine(item);
+            }
 
             var expected = new List<string>()
             {
-                "Engineer:Joe",
-                "Engineer:Tom",
-                "Manager:Kevin",
-                "Engineer:Bas",
-                "OP:Mary",
-                "Engineer:Joey",
+                "OP:Andy",
+                "Engineer:Frank"
             };
 
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
@@ -200,6 +203,17 @@ internal static class WithoutLinq
     {
         return resources.Where((product, index) => predicate(product, index));
     }
+}
+
+internal static class YourOwnLinq
+{
+    public static IEnumerable<string> ReplaceUrl(this IEnumerable<string> urls)
+    {
+        foreach (var url in urls)
+        {
+            yield return url.Replace("http:", "https:");
+        }
+    }
 
     public static IEnumerable<T> MyWhere<T>(this IEnumerable<T> resources, Predicate<T> predicate)
     {
@@ -211,17 +225,6 @@ internal static class WithoutLinq
                 yield return item;
             }
             index++;
-        }
-    }
-}
-
-internal static class YourOwnLinq
-{
-    public static IEnumerable<string> ReplaceUrl(this IEnumerable<string> urls)
-    {
-        foreach (var url in urls)
-        {
-            yield return url.Replace("http:", "https:");
         }
     }
 

@@ -40,6 +40,21 @@ namespace LinqTests
 
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
+
+        [TestMethod]
+        public void find_products_that_price_between_200_and_500_and_cost_than_30()
+        {
+            var products = RepositoryFactory.GetProducts();
+            var actual = products.Where(x => x.Price > 200 && x.Price < 500 && x.Cost > 30);
+
+            var expected = new List<Product>()
+            {
+                new Product{Id=3, Cost=31, Price=310, Supplier="Odd-e" },
+                new Product{Id=4, Cost=41, Price=410, Supplier="Odd-e" },
+            };
+
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
     }
 }
 

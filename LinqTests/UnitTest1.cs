@@ -30,7 +30,7 @@ namespace LinqTests
         public void find_products_that_price_between_200_and_500_linq()
         {
             var products = RepositoryFactory.GetProducts();
-            var actual = products.Where(x => x.Price > 200 && x.Price < 500);
+            var actual = products.MyWhere(x => x.Price > 200 && x.Price < 500);
 
             var expected = new List<Product>()
             {
@@ -46,7 +46,7 @@ namespace LinqTests
         public void find_products_that_price_between_200_and_500_and_cost_than_30()
         {
             var products = RepositoryFactory.GetProducts();
-            var actual = products.Where(x => x.Price > 200 && x.Price < 500 && x.Cost > 30);
+            var actual = products.MyWhere(x => x.Price > 200 && x.Price < 500 && x.Cost > 30);
 
             var expected = new List<Product>()
             {
@@ -105,6 +105,76 @@ namespace LinqTests
 
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
         }
+
+        [TestMethod]
+        public void replace_url_http_to_https()
+        {
+            var urls = RepositoryFactory.GetUrls();
+            var actual = urls.ReplaceUrl();
+
+            var expected = new List<string>()
+            {
+                "https://tw.yahoo.com",
+                "https://facebook.com",
+                "https://twitter.com",
+                "https://github.com",
+            };
+
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
+
+        [TestMethod]
+        public void replace_url_http_to_https_by_length()
+        {
+            var urls = RepositoryFactory.GetUrls();
+            var actual = urls.MySelect(url => url.Length);
+
+            var expected = new List<int>()
+            {
+                19,
+                20,
+                19,
+                17,
+            };
+
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
+
+        [TestMethod]
+        public void replace_url_http_to_https_linq()
+        {
+            var urls = RepositoryFactory.GetUrls();
+            var actual = urls.Select(x => x.Replace("http:", "https:"));
+
+            var expected = new List<string>()
+            {
+                "https://tw.yahoo.com",
+                "https://facebook.com",
+                "https://twitter.com",
+                "https://github.com",
+            };
+
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
+
+        [TestMethod]
+        public void find_employees_age_lower_25_get_role_and_name()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            var actual = employees.MyWhere(x => x.Age > 25).MySelect(y => $"{y.Role}:{y.Name}");
+
+            var expected = new List<string>()
+            {
+                "Engineer:Joe",
+                "Engineer:Tom",
+                "Manager:Kevin",
+                "Engineer:Bas",
+                "OP:Mary",
+                "Engineer:Joey",
+            };
+
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
     }
 }
 
@@ -123,15 +193,43 @@ internal static class WithoutLinq
 
     public static IEnumerable<T> FindResult<T>(this IEnumerable<T> resource, Func<T, bool> predicate)
     {
-        return resource.Where(product => predicate(product));
+        return resource.MyWhere(product => predicate(product));
     }
 
     public static IEnumerable<T> FindResultWithIndex<T>(this IEnumerable<T> resources, Func<T, int, bool> predicate)
     {
         return resources.Where((product, index) => predicate(product, index));
     }
+
+    public static IEnumerable<T> MyWhere<T>(this IEnumerable<T> resources, Predicate<T> predicate)
+    {
+        var index = 0;
+        foreach (var item in resources)
+        {
+            if (predicate(item))
+            {
+                yield return item;
+            }
+            index++;
+        }
+    }
 }
 
-internal class YourOwnLinq
+internal static class YourOwnLinq
 {
+    public static IEnumerable<string> ReplaceUrl(this IEnumerable<string> urls)
+    {
+        foreach (var url in urls)
+        {
+            yield return url.Replace("http:", "https:");
+        }
+    }
+
+    public static IEnumerable<TResult> MySelect<TSource, TResult>(this IEnumerable<TSource> sources, Func<TSource, TResult> selector)
+    {
+        foreach (var item in sources)
+        {
+            yield return selector(item);
+        }
+    }
 }

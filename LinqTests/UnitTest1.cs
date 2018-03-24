@@ -444,3 +444,17 @@ internal static class YourOwnLinq
         }
     }
 }
+
+//Func<Product, bool> predicate
+//-----> predicate(object)---->will return bool value
+
+//Action
+//-----> void xxxxx()
+
+//===================================
+//extension method
+//1.static class
+//    2.static function
+//3.針對特定型別讓它有擴充方法可以用 要加上this 並擺在第一個參數
+//4.namespace
+//===================================

@@ -158,7 +158,7 @@ namespace LinqTests
         }
 
         [TestMethod]
-        public void find_employees_age_lower_25_get_role_and_name()
+        public void find_employees_age_lower_25_get_role_and_nametake()
         {
             var employees = RepositoryFactory.GetEmployees();
             var actual = employees
@@ -174,6 +174,115 @@ namespace LinqTests
             {
                 "OP:Andy",
                 "Engineer:Frank"
+            };
+
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
+
+        [TestMethod]
+        public void take_top_2_employees()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            var actual = employees.FindResultWithIndex((x, index) => index < 2);
+
+            var expected = new List<Employee>()
+            {
+                new Employee{Name="Joe", Role=RoleType.Engineer, MonthSalary=100, Age=44, WorkingYear=2.6 } ,
+                new Employee{Name="Tom", Role=RoleType.Engineer, MonthSalary=140, Age=33, WorkingYear=2.6} ,
+            };
+
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
+
+        [TestMethod]
+        public void take_top_2_employees_new()
+        {
+            IEnumerable<Employee> employees = RepositoryFactory.GetEmployees();
+            var actual = employees.TakeByIndex(index => index < 2);
+
+            var expected = new List<Employee>()
+            {
+                new Employee{Name="Joe", Role=RoleType.Engineer, MonthSalary=100, Age=44, WorkingYear=2.6 } ,
+                new Employee{Name="Tom", Role=RoleType.Engineer, MonthSalary=140, Age=33, WorkingYear=2.6} ,
+            };
+
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
+
+        [TestMethod]
+        public void skip_top_6_employees()
+        {
+            IEnumerable<Employee> employees = RepositoryFactory.GetEmployees();
+            var actual = employees.SkipByIndex(5);
+
+            var expected = new List<Employee>()
+            {
+                new Employee{Name="Frank", Role=RoleType.Engineer, MonthSalary=120, Age=16, WorkingYear=2.6} ,
+                new Employee{Name="Joey", Role=RoleType.Engineer, MonthSalary=250, Age=40, WorkingYear=2.6}
+            };
+
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
+
+        [TestMethod]
+        public void group_every_3_employee_sum_salary()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            var actual = YourOwnLinq.CalSalary(employees, 3, x => x.MonthSalary);
+
+            var expected = new List<int>()
+             {
+                 620,
+                 540,
+                 370
+             };
+
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
+
+        [TestMethod]
+        public void cal_salary()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            var actual = YourOwnLinq.GetSumSalary(employees, 3, x => x.MonthSalary);
+            var expected = new List<int>()
+            {
+                620,
+                540,
+                370
+            };
+
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
+
+        [TestMethod]
+        public void take_top_2_employee_salary_over_150()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            var actual =
+                YourOwnLinq.GetSalaryOverSettingByNumber(employees, employee => employee.MonthSalary > 150, 2);
+            var expected = new List<Employee>()
+            {
+                new Employee{Name="Kevin", Role=RoleType.Manager, MonthSalary=380, Age=55, WorkingYear=2.6} ,
+                new Employee{Name="Bas", Role=RoleType.Engineer, MonthSalary=280, Age=36, WorkingYear=2.6}
+            };
+
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
+
+        [TestMethod]
+        public void skip_3_while_salary_lower_150()
+        {
+            var employee = RepositoryFactory.GetEmployees();
+            var actual = YourOwnLinq.SkipWhile(employee, 3, e => e.MonthSalary < 150);
+
+            var expected = new List<Employee>()
+            {
+                new Employee{Name="Kevin", Role=RoleType.Manager, MonthSalary=380, Age=55, WorkingYear=2.6} ,
+                new Employee{Name="Bas", Role=RoleType.Engineer, MonthSalary=280, Age=36, WorkingYear=2.6} ,
+                new Employee{Name="Mary", Role=RoleType.OP, MonthSalary=180, Age=26, WorkingYear=2.6} ,
+                new Employee{Name="Frank", Role=RoleType.Engineer, MonthSalary=120, Age=16, WorkingYear=2.6} ,
+                new Employee{Name="Joey", Role=RoleType.Engineer, MonthSalary=250, Age=40, WorkingYear=2.6},
             };
 
             expected.ToExpectedObject().ShouldEqual(actual.ToList());
@@ -233,6 +342,105 @@ internal static class YourOwnLinq
         foreach (var item in sources)
         {
             yield return selector(item);
+        }
+    }
+
+    public static IEnumerable<Employee> TakeByIndex(this IEnumerable<Employee> employees, Func<int, bool> selector)
+    {
+        var emp = employees.GetEnumerator();
+        var index = 0;
+        while (emp.MoveNext())
+        {
+            if (selector(index))
+            {
+                yield return emp.Current;
+            }
+            else
+            {
+                yield break;
+            }
+            index++;
+        }
+    }
+
+    public static IEnumerable<Employee> SkipByIndex(this IEnumerable<Employee> employees, int skipNumber)
+    {
+        var emp = employees.GetEnumerator();
+        var index = 0;
+        while (emp.MoveNext())
+        {
+            if (skipNumber < index)
+            {
+                yield return emp.Current;
+            }
+
+            index++;
+        }
+    }
+
+    public static IEnumerable<int> CalSalary(IEnumerable<Employee> employees, int groupCount, Func<Employee, int> func)
+    {
+        var sum = 0;
+        var index = 1;
+        foreach (var employee in employees)
+        {
+            sum += func(employee);
+            if (index % groupCount == 0 && index != 0)
+            {
+                yield return sum;
+                sum = 0;
+            }
+            index++;
+        }
+        if (index >= employees.Count())
+        {
+            yield return sum;
+        }
+    }
+
+    public static IEnumerable<int> GetSumSalary(IEnumerable<Employee> employees, int groupCount, Func<Employee, int> func)
+    {
+        var idx = 0;
+        while (idx < employees.Count())
+        {
+            yield return employees.Skip(idx).Take(groupCount).Sum(func);
+            idx += groupCount;
+        }
+    }
+
+    public static IEnumerable<Employee> GetSalaryOverSettingByNumber(IEnumerable<Employee> employees, Func<Employee, bool> func, int takeCount)
+    {
+        var idx = 0;
+
+        foreach (var employee in employees)
+        {
+            if (func(employee))
+            {
+                yield return employee;
+                idx++;
+            }
+            if (idx == takeCount)
+            {
+                yield break;
+            }
+        }
+    }
+
+    public static IEnumerable<Employee> SkipWhile(IEnumerable<Employee> employee, int count, Func<Employee, bool> func)
+    {
+        var idx = 0;
+        var emp = employee.GetEnumerator();
+
+        while (emp.MoveNext())
+        {
+            if (func(emp.Current) && idx < count)
+            {
+                idx++;
+            }
+            else
+            {
+                yield return emp.Current;
+            }
         }
     }
 }

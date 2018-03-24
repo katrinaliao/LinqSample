@@ -9,10 +9,5 @@ namespace LinqTests
         public int MonthSalary { get; set; }
         public int Age { get; set; }
         public double WorkingYear { get; set; }
-
-        public bool FilterEmployeeCondition()
-        {
-            return Age > 30;
-        }
     }
 }

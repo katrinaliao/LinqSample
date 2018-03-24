@@ -76,12 +76,28 @@ namespace LinqTests
         public void find_employee_by_extension()
         {
             var employees = RepositoryFactory.GetEmployees();
-            var actual = employees.FindResult(x => x.FilterEmployeeCondition());
+            var actual = employees.FindResult(x => x.Age > 30);
 
             var expected = new List<Employee>()
             {
                 new Employee{Name="Joe", Role=RoleType.Engineer, MonthSalary=100, Age=44, WorkingYear=2.6 } ,
                 new Employee{Name="Tom", Role=RoleType.Engineer, MonthSalary=140, Age=33, WorkingYear=2.6} ,
+                new Employee{Name="Kevin", Role=RoleType.Manager, MonthSalary=380, Age=55, WorkingYear=2.6} ,
+                new Employee{Name="Bas", Role=RoleType.Engineer, MonthSalary=280, Age=36, WorkingYear=2.6} ,
+                new Employee{Name="Joey", Role=RoleType.Engineer, MonthSalary=250, Age=40, WorkingYear=2.6},
+            };
+
+            expected.ToExpectedObject().ShouldEqual(actual.ToList());
+        }
+
+        [TestMethod]
+        public void find_employee_by_extension_2()
+        {
+            var employees = RepositoryFactory.GetEmployees();
+            var actual = employees.FindResultWithIndex((x, index) => x.Age > 30 && index > 1);
+
+            var expected = new List<Employee>()
+            {
                 new Employee{Name="Kevin", Role=RoleType.Manager, MonthSalary=380, Age=55, WorkingYear=2.6} ,
                 new Employee{Name="Bas", Role=RoleType.Engineer, MonthSalary=280, Age=36, WorkingYear=2.6} ,
                 new Employee{Name="Joey", Role=RoleType.Engineer, MonthSalary=250, Age=40, WorkingYear=2.6},
@@ -108,6 +124,11 @@ internal static class WithoutLinq
     public static IEnumerable<T> FindResult<T>(this IEnumerable<T> resource, Func<T, bool> predicate)
     {
         return resource.Where(product => predicate(product));
+    }
+
+    public static IEnumerable<T> FindResultWithIndex<T>(this IEnumerable<T> resources, Func<T, int, bool> predicate)
+    {
+        return resources.Where((product, index) => predicate(product, index));
     }
 }
 
